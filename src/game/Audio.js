@@ -61,6 +61,7 @@ export class AudioEngine {
   }
 
   startDiner() {
+    if (!this.ctx) return;
     this._stopLoops();
     this.mode = 'diner';
     this._hum(110, 0.04);
@@ -70,6 +71,7 @@ export class AudioEngine {
   }
 
   startArena() {
+    if (!this.ctx) return;
     this._stopLoops();
     this.mode = 'arena';
     this.setDistortion(0.18);

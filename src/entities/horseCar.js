@@ -5,12 +5,12 @@ import { Projectile } from './projectiles.js';
 import { nearestUfo } from './horse.js';
 
 export class HorseCar {
-  constructor(scene, position) {
+  constructor(scene, position, startHungry = false) {
     this.scene = scene;
     this.root = createHorseCarMesh();
     this.root.position.copy(position);
     scene.add(this.root);
-    this.energy = 40 + Math.random() * 50;
+    this.energy = startHungry ? 18 : 40 + Math.random() * 50;
     this.radius = 3.2;
     this.speed = 9;
     this.yaw = Math.random() * Math.PI * 2;

@@ -15,7 +15,8 @@ export class RestaurantScene {
     this.morphables = [];
     this.lights = [];
     this.eatStep = 0;
-    this.look = { yaw: 0, pitch: -0.12 };
+    // Three.js cameras look down -Z by default. The table sits at +Z, so face +Z.
+    this.look = { yaw: Math.PI, pitch: -0.32 };
 
     this._buildRoom();
     this._buildBooth();
@@ -23,7 +24,8 @@ export class RestaurantScene {
     this._buildLights();
 
     this.camera = new THREE.PerspectiveCamera(62, 1, 0.08, 80);
-    this.camera.position.set(0, 1.28, 0.15);
+    this.camera.rotation.order = 'YXZ';
+    this.camera.position.set(0, 1.34, 0.12);
     this.baseCamPos = this.camera.position.clone();
   }
 
@@ -129,10 +131,14 @@ export class RestaurantScene {
     back.position.set(0, 1.0, -0.9);
     this.scene.add(this._track(back, { stretch: 12 }));
 
-    const table = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 1.0), wood);
-    table.position.set(0, 0.78, 0.85);
+    const table = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 1.15), wood);
+    table.position.set(0, 0.78, 0.92);
     this.scene.add(this._track(table, { sink: true }));
     this.table = table;
+    const lamp = new THREE.PointLight(0xffe2b0, 7, 6, 2);
+    lamp.position.set(0, 1.55, 0.9);
+    this.scene.add(lamp);
+    this.lights.push({ panel: null, light: lamp, base: 7 });
 
     const oppSeat = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.45, 1.1), vinyl);
     oppSeat.position.set(0, 0.35, 1.9);
@@ -154,7 +160,8 @@ export class RestaurantScene {
 
   _buildFood() {
     const meal = createFoodMeal();
-    meal.group.position.set(0, 0.84, 0.82);
+    meal.group.position.set(0, 0.84, 0.88);
+    meal.group.scale.setScalar(2.35);
     this.scene.add(meal.group);
     this.food = meal;
     this.clickables = [meal.burger, meal.fries, meal.shake];
@@ -164,7 +171,7 @@ export class RestaurantScene {
   }
 
   _buildLights() {
-    const hemi = new THREE.HemisphereLight(0xfff1d6, 0x2a1810, 0.55);
+    const hemi = new THREE.HemisphereLight(0xfff1d6, 0x2a1810, 1.05);
     this.scene.add(hemi);
 
     for (const z of [-10, -2, 6]) {
@@ -196,10 +203,12 @@ export class RestaurantScene {
   }
 
   applyLook(dx, dy) {
-    this.look.yaw -= dx * 0.0022;
-    this.look.pitch -= dy * 0.002;
-    this.look.pitch = THREE.MathUtils.clamp(this.look.pitch, -0.7, 0.55);
-    this.look.yaw = THREE.MathUtils.clamp(this.look.yaw, -1.15, 1.15);
+    dx = THREE.MathUtils.clamp(dx, -28, 28);
+    dy = THREE.MathUtils.clamp(dy, -28, 28);
+    this.look.yaw -= dx * 0.0016;
+    this.look.pitch -= dy * 0.0015;
+    this.look.pitch = THREE.MathUtils.clamp(this.look.pitch, -0.85, 0.35);
+    this.look.yaw = THREE.MathUtils.clamp(this.look.yaw, Math.PI - 1.05, Math.PI + 1.05);
   }
 
   updateCamera(time) {
@@ -209,7 +218,10 @@ export class RestaurantScene {
       this.baseCamPos.y + breathe,
       this.baseCamPos.z,
     );
-    this.camera.rotation.set(this.look.pitch, this.look.yaw, Math.sin(time * 0.4) * 0.01);
+    this.camera.rotation.order = 'YXZ';
+    this.camera.rotation.y = this.look.yaw;
+    this.camera.rotation.x = this.look.pitch;
+    this.camera.rotation.z = Math.sin(time * 0.4) * 0.01;
   }
 
   pickFood(raycaster) {

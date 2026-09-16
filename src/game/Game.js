@@ -66,17 +66,22 @@ export class Game {
 
     this.overlay.onStart(() => this.startGame());
     window.addEventListener('resize', () => this.resize());
+    canvas.addEventListener('click', () => {
+      if (this.mode === 'restaurant' || this.mode === 'drive' || this.mode === 'pullout' || this.mode === 'cockpit') {
+        this.input.requestLock();
+        this._kickAudio();
+      }
+    });
     this.resize();
-
-    const skip = new URLSearchParams(window.location.search).get('drive');
-    if (skip === '1') {
-      this.overlay.hideMenu();
-      this.audio.resume().then(() => this.enterArena(true));
-    }
+    this.skipIntro = new URLSearchParams(window.location.search).get('drive') === '1';
   }
 
   start() {
     this.clock.start();
+    if (this.skipIntro) {
+      this.overlay.hideMenu();
+      this.enterArena(true);
+    }
     this.renderer.setAnimationLoop(() => this.frame());
   }
 
@@ -95,11 +100,6 @@ export class Game {
     this.overlay.showHud('cinematic');
     this.overlay.setPrompt(this.restaurant.nextPrompt());
     this.input.requestLock();
-    this.canvas.addEventListener('click', () => {
-      if (this.mode === 'restaurant' || this.mode === 'drive' || this.mode === 'pullout') {
-        this.input.requestLock();
-      }
-    });
   }
 
   enterArena(skipCinematic = false) {
@@ -110,8 +110,8 @@ export class Game {
     this.arena = new ArenaScene();
     this.camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 700);
     this.fx.setScene(this.arena.scene, this.camera);
-    this.fx.setBloom(0.62);
-    this.fx.setDream(0.12, 0.08);
+    this.fx.setBloom(0.42);
+    this.fx.setDream(0.08, 0.05);
     this.particles = new ParticleSystem(this.arena.scene);
     this.car = new PlayerCar(this.arena.scene);
     this.ufos = [];
@@ -123,14 +123,17 @@ export class Game {
     this.food = 0;
     this.complete = false;
 
-    for (let i = 0; i < CONFIG.ufoCount; i++) this.ufos.push(spawnUfo(this.arena.scene, this.ufos));
+    for (let i = 0; i < CONFIG.ufoCount; i++) {
+      this.ufos.push(spawnUfo(this.arena.scene, this.ufos, { near: i < 4 }));
+    }
     for (let i = 0; i < CONFIG.horseCount; i++) {
-      const p = new THREE.Vector3((Math.random() - 0.5) * 80, 0, (Math.random() - 0.5) * 80);
-      this.horses.push(new Horse(this.arena.scene, p));
+      const p = new THREE.Vector3((Math.random() - 0.5) * 36, 0, 8 + Math.random() * 22);
+      const horse = new Horse(this.arena.scene, p, i < 3);
+      this.horses.push(horse);
     }
     for (let i = 0; i < CONFIG.horseCarCount; i++) {
-      const p = new THREE.Vector3((Math.random() - 0.5) * 120, 0, 30 + Math.random() * 40);
-      this.horseCars.push(new HorseCar(this.arena.scene, p));
+      const p = new THREE.Vector3(14 + i * 10, 0, -12 - i * 8);
+      this.horseCars.push(new HorseCar(this.arena.scene, p, i === 0));
     }
 
     this.audio.startArena();
@@ -138,6 +141,7 @@ export class Game {
     if (skipCinematic) {
       this.mode = 'drive';
       this.car.pull = 1;
+      this.car.updateCamera(this.camera, 10, 'drive');
       this.overlay.setPrompt('');
     } else {
       this.mode = 'cockpit';
@@ -209,6 +213,7 @@ export class Game {
 
   updateDrive(dt) {
     if (!this.arena || !this.car) return;
+    this._kickAudio();
 
     if (this.mode === 'cockpit' && this.modeTime > 2.4) {
       this.mode = 'pullout';
@@ -336,6 +341,19 @@ export class Game {
       food: this.food,
       speed: Math.abs(this.car.speed),
       health: this.car.health,
+    });
+  }
+
+  _kickAudio() {
+    const inArena = this.mode === 'drive' || this.mode === 'pullout' || this.mode === 'cockpit';
+    if (this.audio.ctx && this.audio.ctx.state === 'running') {
+      if (inArena && this.audio.mode !== 'arena') this.audio.startArena();
+      return;
+    }
+    const engaged = this.input.throttle() || this.input.firing() || this.input.keys.size > 0;
+    if (!engaged) return;
+    this.audio.resume().then(() => {
+      if (inArena) this.audio.startArena();
     });
   }
 

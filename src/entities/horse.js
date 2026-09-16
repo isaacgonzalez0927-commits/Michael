@@ -3,12 +3,12 @@ import { CONFIG, COLORS } from '../config.js';
 import { createHorseMesh } from '../render/meshes.js';
 
 export class Horse {
-  constructor(scene, position) {
+  constructor(scene, position, startHungry = false) {
     this.scene = scene;
     this.root = createHorseMesh(Math.random() > 0.5 ? COLORS.magenta : COLORS.cyan);
     this.root.position.copy(position);
     scene.add(this.root);
-    this.energy = 55 + Math.random() * 40;
+    this.energy = startHungry ? 16 + Math.random() * 10 : 55 + Math.random() * 40;
     this.radius = 1.4;
     this.speed = 11;
     this.yaw = Math.random() * Math.PI * 2;

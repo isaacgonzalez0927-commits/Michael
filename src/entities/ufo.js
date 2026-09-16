@@ -98,16 +98,24 @@ export class UFO {
   }
 }
 
-export function spawnUfo(scene, existing = []) {
+export function spawnUfo(scene, existing = [], options = {}) {
   const half = 170;
-  let x = (Math.random() * 2 - 1) * half;
-  let z = (Math.random() * 2 - 1) * half;
-  if (existing.length) {
-    // Prefer edges so they swoop in.
-    if (Math.random() > 0.5) x = Math.sign(Math.random() - 0.5) * half;
-    else z = Math.sign(Math.random() - 0.5) * half;
+  let x;
+  let z;
+  if (options.near) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 22 + Math.random() * 28;
+    x = Math.cos(a) * r;
+    z = Math.sin(a) * r;
+  } else {
+    x = (Math.random() * 2 - 1) * half;
+    z = (Math.random() * 2 - 1) * half;
+    if (existing.length) {
+      if (Math.random() > 0.5) x = Math.sign(Math.random() - 0.5) * half;
+      else z = Math.sign(Math.random() - 0.5) * half;
+    }
   }
   const type = Math.random() > 0.45 ? 'laser' : 'water';
-  const y = 16 + Math.random() * 12;
+  const y = options.near ? 12 + Math.random() * 8 : 16 + Math.random() * 12;
   return new UFO(scene, type, new THREE.Vector3(x, y, z));
 }

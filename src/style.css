@@ -126,6 +126,14 @@ h1 {
   display: block;
 }
 
+.hud.cinematic .objective,
+.hud.cinematic .stats,
+.hud.cinematic .health-bar,
+.hud.cinematic .controls,
+.hud.cinematic .crosshair {
+  display: none;
+}
+
 .objective {
   position: absolute;
   top: 22px;
@@ -298,7 +306,7 @@ h1 {
   bottom: 22px;
   left: 22px;
   width: 220px;
-  height: 12px;
+  height: 16px;
   border: 1px solid rgba(214, 255, 60, 0.5);
   background: rgba(0, 0, 0, 0.4);
 }

@@ -24,8 +24,8 @@ export class ArenaScene {
   }
 
   _lights() {
-    this.scene.add(new THREE.HemisphereLight(0x7a5cff, 0x082028, 0.45));
-    const key = new THREE.DirectionalLight(0xc8f4ff, 0.55);
+    this.scene.add(new THREE.HemisphereLight(0x7a5cff, 0x082028, 0.7));
+    const key = new THREE.DirectionalLight(0xc8f4ff, 0.85);
     key.position.set(40, 80, 20);
     this.scene.add(key);
     this.playerLight = new THREE.PointLight(0xfff2c4, 8, 38, 1.6);

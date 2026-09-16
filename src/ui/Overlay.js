@@ -73,6 +73,7 @@ export class Overlay {
   showHud(kind) {
     this.hud.classList.add('visible');
     const driving = kind === 'drive';
+    this.hud.classList.toggle('cinematic', !driving);
     this.crosshair.classList.toggle('visible', driving);
     this.controls.style.display = driving ? 'block' : 'none';
     if (driving) {
