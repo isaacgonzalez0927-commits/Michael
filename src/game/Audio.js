@@ -21,6 +21,7 @@ export class AudioEngine {
     this.noise = null;
     this.mode = 'off';
     this.distortion = 0;
+    this.engine = null;
   }
 
   async resume() {
@@ -74,12 +75,34 @@ export class AudioEngine {
     if (!this.ctx) return;
     this._stopLoops();
     this.mode = 'arena';
-    this.setDistortion(0.18);
-    this._hum(46, 0.05);
-    this._hum(92.5, 0.03);
-    this._hum(138, 0.02);
-    this._hum(311, 0.012);
-    this._startNoise(0.045, 900);
+    this.setDistortion(0.12);
+    this._hum(46, 0.045);
+    this._hum(92.5, 0.028);
+    this._hum(138, 0.018);
+    this._hum(311, 0.01);
+    this._startNoise(0.04, 780);
+    this._startEngine();
+  }
+
+  _startEngine() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.value = 48;
+    g.gain.value = 0.012;
+    osc.connect(g);
+    g.connect(this.drive);
+    osc.start();
+    this.engine = { osc, g };
+    this.hum.push(osc, g);
+  }
+
+  setEngine(speed) {
+    if (!this.engine || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.engine.osc.frequency.setTargetAtTime(42 + Math.abs(speed) * 3.4, t, 0.08);
+    this.engine.g.gain.setTargetAtTime(0.01 + Math.min(0.05, Math.abs(speed) * 0.0011), t, 0.08);
   }
 
   _hum(freq, gain) {
@@ -123,6 +146,7 @@ export class AudioEngine {
       this.noise.src.disconnect();
       this.noise = null;
     }
+    this.engine = null;
   }
 
   _blip(freq, dur, type = 'square', gain = 0.08, slide = 0) {
@@ -152,12 +176,14 @@ export class AudioEngine {
   }
 
   shoot() {
-    this._blip(520, 0.07, 'square', 0.05, -400);
+    this._blip(680, 0.06, 'square', 0.045, -520);
+    this._blip(180, 0.08, 'sawtooth', 0.03, -90);
   }
 
   explosion() {
-    this._blip(90, 0.4, 'sawtooth', 0.12, -50);
-    this._blip(40, 0.55, 'square', 0.08, -10);
+    this._blip(70, 0.45, 'sawtooth', 0.14, -40);
+    this._blip(38, 0.62, 'square', 0.09, -8);
+    this._blip(220, 0.18, 'triangle', 0.05, -160);
   }
 
   pickup() {

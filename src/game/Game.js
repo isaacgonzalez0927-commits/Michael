@@ -35,11 +35,11 @@ export class Game {
       antialias: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.12;
 
     this.camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.08, 600);
     this.dummyScene = new THREE.Scene();
@@ -63,6 +63,9 @@ export class Game {
     this.complete = false;
     this.laserHurtCd = 0;
     this.spawnCd = 0;
+    this.arenaFade = 0;
+
+    this.overlay.setFade(0);
 
     this.overlay.onStart(() => this.startGame());
     window.addEventListener('resize', () => this.resize());
@@ -111,8 +114,8 @@ export class Game {
     this.arena = new ArenaScene();
     this.camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 700);
     this.fx.setScene(this.arena.scene, this.camera);
-    this.fx.setBloom(0.42);
-    this.fx.setDream(0.08, 0.05);
+    this.fx.setBloom(0.58, 0.48);
+    this.fx.setDream(skipCinematic ? 0.08 : 0.36, skipCinematic ? 0.05 : 0.22);
     this.particles = new ParticleSystem(this.arena.scene);
     this.car = new PlayerCar(this.arena.scene);
     this.ufos = [];
@@ -139,6 +142,8 @@ export class Game {
 
     this.audio.startArena();
     this.overlay.showHud('drive');
+    this.overlay.setFade(1);
+    this.arenaFade = skipCinematic ? 0.45 : 1.35;
     if (skipCinematic) {
       this.mode = 'drive';
       this.car.pull = 1;
@@ -205,11 +210,12 @@ export class Game {
     this.restaurant.morph(t);
     this.restaurant.updateCamera(this.time);
     this.audio.setDistortion(t);
-    this.fx.setDream(0.15 + t * 0.9, 0.2 + t * 1.4);
-    this.fx.setBloom(0.3 + t * 1.4);
+    this.fx.setDream(0.12 + t * 0.85, 0.16 + t * 1.15);
+    this.fx.setBloom(0.28 + t * 1.15);
     if (t > 0.35 && t < 0.9) {
       this.overlay.setPrompt('Everything is the wrong size.');
     }
+    if (t > 0.72) this.overlay.setFade((t - 0.72) / 0.28);
     if (t >= 1) this.enterArena(false);
   }
 
@@ -235,6 +241,13 @@ export class Game {
     }
     const camMode = this.mode === 'drive' ? 'drive' : this.mode;
     this.car.updateCamera(this.camera, dt, camMode);
+    if (this.arenaFade > 0) {
+      this.arenaFade = Math.max(0, this.arenaFade - dt);
+      this.overlay.setFade(this.arenaFade / 1.35);
+      const k = this.arenaFade / 1.35;
+      this.fx.setDream(0.07 + k * 0.28, 0.05 + k * 0.2);
+    }
+    this.audio.setEngine(this.car.speed);
 
     this.arena.update(dt, this.time, this.car.position);
     this.particles.update(dt);
@@ -261,18 +274,19 @@ export class Game {
 
     for (const ufo of this.ufos) {
       if (!ufo.alive) continue;
-      ufo.update(dt, this.time, this.car.position, this.projectiles);
+      ufo.update(dt, this.time, this.car.position, this.projectiles, this.arena);
       if (ufo.laser?.active && this.car.alive && ufo.laser.hitsPoint(this.car.position, 2.4)) {
         if (this.laserHurtCd <= 0) {
           this._hurt(7);
           this.laserHurtCd = 0.35;
           this.audio.laser();
+          this.particles.burst(this.car.position.clone().setY(1.2), 0xff3dc8, 8, 6, 0.12, 0.28);
         }
       }
     }
 
     for (const horse of this.horses) {
-      const dmg = horse.update(dt, this.ufos, this.arena);
+      const dmg = horse.update(dt, this.ufos, this.arena, this.horses);
       if (dmg) this._damageNearestUfo(horse.position, 5.2, dmg);
     }
     for (const hc of this.horseCars) hc.update(dt, this.ufos, this.arena, this.projectiles);
@@ -313,12 +327,14 @@ export class Game {
 
     for (let i = this.foodDrops.length - 1; i >= 0; i--) {
       const drop = this.foodDrops[i];
-      drop.update(dt, this.time);
-      if (this.car.alive && drop.position.distanceTo(this.car.position) < 6.5) {
+      drop.update(dt, this.time, this.car.position);
+      const xz = Math.hypot(drop.position.x - this.car.position.x, drop.position.z - this.car.position.z);
+      if (this.car.alive && xz < 5.8) {
         if (this.food < CONFIG.maxFood) {
           this.food += 1;
           this.audio.pickup();
           this.overlay.toast('YARDBIRD PAIL');
+          this.particles.pickup(drop.position.clone());
         }
         drop.collect();
         this.foodDrops.splice(i, 1);
@@ -343,6 +359,7 @@ export class Game {
       food: this.food,
       speed: Math.abs(this.car.speed),
       health: this.car.health,
+      dt,
     });
   }
 
@@ -405,7 +422,7 @@ export class Game {
         this.food -= 1;
         this.audio.feed();
         this.overlay.toast('THE HORSE ACCEPTS THE PAIL');
-        this.particles.burst(ally.position.clone().setY(1.4), 0xffc14a, 12, 5, 0.12, 0.5);
+        this.particles.pickup(ally.position.clone().setY(1.4));
         break;
       }
     }

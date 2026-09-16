@@ -70,7 +70,7 @@ export class PostFX {
     this.renderer = renderer;
     this.composer = new EffectComposer(renderer);
     this.renderPass = new RenderPass(scene, camera);
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.45, 0.7, 0.35);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.85, 0.42);
     this.dream = new ShaderPass(DreamShader);
     this.output = new OutputPass();
     this.composer.addPass(this.renderPass);
@@ -91,8 +91,9 @@ export class PostFX {
     this.bloom.strength = 0.35 + amount * 1.1;
   }
 
-  setBloom(strength) {
+  setBloom(strength, threshold) {
     this.bloom.strength = strength;
+    if (threshold != null) this.bloom.threshold = threshold;
   }
 
   resize(w, h) {

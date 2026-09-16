@@ -18,7 +18,7 @@ export class Overlay {
       </div>
       <div class="hud" id="hud">
         <div class="objective">
-          <div class="objective-title" id="objective-title">DESTROY 10 UFOs</div>
+          <div class="objective-title" id="objective-title">DESTROY 0 / 10</div>
           <div class="objective-sub" id="objective-sub">HUNGRY HORSES: 0</div>
         </div>
         <div class="stats">
@@ -31,13 +31,17 @@ export class Overlay {
             <div class="stat-value" id="speed-count">0</div>
           </div>
         </div>
-        <div class="health-bar"><span id="health-fill"></span></div>
+        <div class="health-wrap">
+          <div class="stat-label">CAR</div>
+          <div class="health-bar"><span id="health-fill"></span></div>
+        </div>
         <div class="controls" id="controls"></div>
         <div class="prompt" id="prompt"></div>
         <div class="toast" id="toast"></div>
         <div class="complete-banner" id="complete">OBJECTIVE COMPLETE</div>
         <div class="crosshair" id="crosshair"></div>
       </div>
+      <div class="fade" id="fade"></div>
     `;
 
     this.menu = root.querySelector('#menu');
@@ -54,7 +58,10 @@ export class Overlay {
     this.controls = root.querySelector('#controls');
     this.crosshair = root.querySelector('#crosshair');
     this.startBtn = root.querySelector('#start-btn');
+    this.fadeEl = root.querySelector('#fade');
+    this.foodStat = root.querySelector('#stat-food');
     this._toastTimer = 0;
+    this._controlsAge = 0;
   }
 
   onStart(handler) {
@@ -76,9 +83,11 @@ export class Overlay {
     this.hud.classList.toggle('cinematic', !driving);
     this.crosshair.classList.toggle('visible', driving);
     this.controls.style.display = driving ? 'block' : 'none';
+    this.controls.style.opacity = '1';
+    this._controlsAge = 0;
     if (driving) {
       this.controls.innerHTML =
-        'WASD DRIVE<br>MOUSE LOOK<br>CLICK / SPACE SHOOT<br>DRIVE CLOSE TO FEED';
+        'WASD DRIVE<br>MOUSE LOOK<br>CLICK / SPACE SHOOT<br>DRIVE INTO HUNGRY HORSES TO FEED';
     }
   }
 
@@ -110,16 +119,25 @@ export class Overlay {
     this.completeEl.classList.add('show');
   }
 
+  setFade(amount) {
+    this.fadeEl.style.opacity = String(Math.max(0, Math.min(1, amount)));
+  }
+
   updateDrive(state) {
-    const left = Math.max(0, state.goal - state.kills);
     if (state.complete) {
       this.objectiveTitle.textContent = 'OBJECTIVE COMPLETE';
     } else {
-      this.objectiveTitle.textContent = `DESTROY ${left} UFO${left === 1 ? '' : 's'}`;
+      this.objectiveTitle.textContent = `DESTROY ${state.kills} / ${state.goal}`;
     }
     this.objectiveSub.textContent = `HUNGRY HORSES: ${state.hungry}`;
+    this.objectiveSub.style.color = state.hungry > 0 ? '#ff7ad8' : '#9ad7c8';
     this.foodCount.textContent = String(state.food);
+    this.foodStat.classList.toggle('warn', state.food === 0 && state.hungry > 0);
     this.speedCount.textContent = String(Math.round(state.speed));
     this.healthFill.style.width = `${Math.max(0, state.health)}%`;
+    this._controlsAge += state.dt || 0;
+    if (this._controlsAge > 10) {
+      this.controls.style.opacity = String(Math.max(0.18, 1 - (this._controlsAge - 10) * 0.12));
+    }
   }
 }

@@ -277,13 +277,13 @@ export class RestaurantScene {
       mesh.position.x = o.x + Math.sin(k * 8 + o.z) * k * 0.4;
     }
 
-    this.scene.fog.near = 12 - k * 10;
-    this.scene.fog.far = 38 - k * 18;
-    this.scene.background.setHSL(0.85, 0.4, 0.08 + k * 0.05);
-    this.camera.fov = 62 + k * 28;
+    this.scene.fog.near = 12 - k * 8;
+    this.scene.fog.far = 38 - k * 12;
+    this.scene.background.setHSL(0.78, 0.45, 0.08 + k * 0.06);
+    this.camera.fov = 58 + k * 16;
     this.camera.updateProjectionMatrix();
-    this.camera.position.y = this.baseCamPos.y + k * 0.8;
-    this.camera.position.z = this.baseCamPos.z - k * 1.4;
+    this.camera.position.y = this.baseCamPos.y + k * 0.28;
+    this.lookTarget.y = 0.95 + k * 0.8;
 
     for (const entry of this.lights) {
       const flicker = 0.4 + Math.abs(Math.sin(k * 40 + entry.base)) * (0.2 + k * 1.8);

@@ -14,7 +14,13 @@ export function createCarMesh() {
   const root = new THREE.Group();
   root.name = 'car';
 
-  const paint = mat(0x2ec4b6, { metalness: 0.35, roughness: 0.32 });
+  const paint = new THREE.MeshPhysicalMaterial({
+    color: 0x2ec4b6,
+    metalness: 0.62,
+    roughness: 0.18,
+    clearcoat: 0.75,
+    clearcoatRoughness: 0.18,
+  });
   const rust = mat(0x6a3a2a);
   const dark = mat(0x16141c, { roughness: 0.4 });
   const glass = mat(0x87d6ff, { transparent: true, opacity: 0.35, roughness: 0.05, metalness: 0.4 });
@@ -211,9 +217,9 @@ export function createHorseCarMesh() {
 export function createUfoMesh(type) {
   const root = new THREE.Group();
   const isLaser = type === 'laser';
-  const hull = mat(isLaser ? 0xcfd6de : 0x7ad7c7, { metalness: 0.65, roughness: 0.25 });
+  const hull = mat(isLaser ? 0xcfd6de : 0x7ad7c7, { metalness: 0.78, roughness: 0.18 });
   const glowCol = isLaser ? COLORS.magenta : COLORS.cyan;
-  const glow = mat(glowCol, { emissive: glowCol, emissiveIntensity: 1.2 });
+  const glow = mat(glowCol, { emissive: glowCol, emissiveIntensity: 1.8 });
 
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.28, 24), hull);
   root.add(disc);
