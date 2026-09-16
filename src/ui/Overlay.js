@@ -23,7 +23,7 @@ export class Overlay {
         </div>
         <div class="stats">
           <div class="stat" id="stat-food">
-            <div class="stat-label">YARDBIRD PAILS</div>
+            <div class="stat-label">FOOD PAILS</div>
             <div class="stat-value" id="food-count">0</div>
           </div>
           <div class="stat" id="stat-speed">

@@ -217,7 +217,7 @@ export class Game {
     if (!this.arena || !this.car) return;
     this._kickAudio();
 
-    if (this.mode === 'cockpit' && this.modeTime > 2.4) {
+    if (this.mode === 'cockpit' && this.modeTime > 1.6) {
       this.mode = 'pullout';
       this.modeTime = 0;
       this.overlay.setPrompt('WASD to drive. Click to shoot. The horses look hungry.');
@@ -264,8 +264,8 @@ export class Game {
       ufo.update(dt, this.time, this.car.position, this.projectiles);
       if (ufo.laser?.active && this.car.alive && ufo.laser.hitsPoint(this.car.position, 2.4)) {
         if (this.laserHurtCd <= 0) {
-          this._hurt(12);
-          this.laserHurtCd = 0.28;
+          this._hurt(7);
+          this.laserHurtCd = 0.35;
           this.audio.laser();
         }
       }
@@ -314,7 +314,7 @@ export class Game {
     for (let i = this.foodDrops.length - 1; i >= 0; i--) {
       const drop = this.foodDrops[i];
       drop.update(dt, this.time);
-      if (this.car.alive && drop.position.distanceTo(this.car.position) < 3.2) {
+      if (this.car.alive && drop.position.distanceTo(this.car.position) < 6.5) {
         if (this.food < CONFIG.maxFood) {
           this.food += 1;
           this.audio.pickup();
@@ -381,7 +381,7 @@ export class Game {
     this.kills += 1;
     this.audio.explosion();
     this.particles.explosion(ufo.position.clone(), ufo.type === 'laser' ? 0xff3dc8 : 0x4ef0ff);
-    const dropPos = ufo.position.clone();
+    const dropPos = ufo.position.clone().lerp(this.car.position, 0.62);
     dropPos.y = 0.9;
     this.foodDrops.push(new FoodPickup(this.arena.scene, dropPos));
     if (!this.complete && this.kills >= CONFIG.ufoGoal) {

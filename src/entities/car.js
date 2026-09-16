@@ -110,7 +110,7 @@ export class PlayerCar {
 
     this.wetTimer = Math.max(0, this.wetTimer - dt);
     this.cooldown = Math.max(0, this.cooldown - dt);
-    this.health = Math.min(cfg.maxHealth, this.health + dt * 1.5);
+    this.health = Math.min(cfg.maxHealth, this.health + dt * 4.2);
 
     const delta = input.consumeDelta();
     this.camYaw -= delta.dx * 0.0035;

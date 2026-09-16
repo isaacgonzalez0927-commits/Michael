@@ -13,6 +13,7 @@ export class FoodPickup {
     this.root = createBucketMesh(bucketLabel);
     this.root.position.copy(position);
     this.root.position.y = 0.9;
+    this.root.scale.setScalar(1.7);
     scene.add(this.root);
     this.alive = true;
     this.radius = 2.2;

@@ -25,9 +25,9 @@ export class RestaurantScene {
     this.camera = new THREE.PerspectiveCamera(58, 1, 0.08, 80);
     this.camera.rotation.order = 'YXZ';
     // Seated in the booth, looking at the meal — not an FPS camera that can clip walls.
-    this.camera.position.set(0, 1.26, -0.42);
+    this.camera.position.set(0, 1.28, -0.72);
     this.baseCamPos = this.camera.position.clone();
-    this.lookTarget = new THREE.Vector3(0, 0.95, 0.95);
+    this.lookTarget = new THREE.Vector3(0, 0.92, 0.82);
   }
 
   _track(mesh, extra = {}) {
@@ -129,7 +129,7 @@ export class RestaurantScene {
     this.scene.add(this._track(seat));
 
     const back = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.3, 0.18), vinyl);
-    back.position.set(0, 1.0, -0.9);
+    back.position.set(0, 1.0, -1.2);
     this.scene.add(this._track(back, { stretch: 12 }));
 
     const table = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 1.15), wood);
@@ -162,7 +162,7 @@ export class RestaurantScene {
   _buildFood() {
     const meal = createFoodMeal();
     meal.group.position.set(0, 0.88, 0.9);
-    meal.group.scale.setScalar(1.85);
+    meal.group.scale.setScalar(1.35);
     this.scene.add(meal.group);
     const plate = new THREE.Mesh(
       new THREE.CylinderGeometry(0.55, 0.55, 0.03, 24),
