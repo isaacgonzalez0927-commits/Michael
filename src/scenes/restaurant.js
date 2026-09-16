@@ -15,18 +15,19 @@ export class RestaurantScene {
     this.morphables = [];
     this.lights = [];
     this.eatStep = 0;
-    // Three.js cameras look down -Z by default. The table sits at +Z, so face +Z.
-    this.look = { yaw: Math.PI, pitch: -0.32 };
+    this.look = { yaw: 0, pitch: 0 };
 
     this._buildRoom();
     this._buildBooth();
     this._buildFood();
     this._buildLights();
 
-    this.camera = new THREE.PerspectiveCamera(62, 1, 0.08, 80);
+    this.camera = new THREE.PerspectiveCamera(58, 1, 0.08, 80);
     this.camera.rotation.order = 'YXZ';
-    this.camera.position.set(0, 1.34, 0.12);
+    // Seated in the booth, looking at the meal — not an FPS camera that can clip walls.
+    this.camera.position.set(0, 1.26, -0.42);
     this.baseCamPos = this.camera.position.clone();
+    this.lookTarget = new THREE.Vector3(0, 0.95, 0.95);
   }
 
   _track(mesh, extra = {}) {
@@ -135,10 +136,10 @@ export class RestaurantScene {
     table.position.set(0, 0.78, 0.92);
     this.scene.add(this._track(table, { sink: true }));
     this.table = table;
-    const lamp = new THREE.PointLight(0xffe2b0, 7, 6, 2);
-    lamp.position.set(0, 1.55, 0.9);
+    const lamp = new THREE.PointLight(0xffe2b0, 2.4, 7, 2);
+    lamp.position.set(0, 1.7, 0.9);
     this.scene.add(lamp);
-    this.lights.push({ panel: null, light: lamp, base: 7 });
+    this.lights.push({ panel: null, light: lamp, base: 2.4 });
 
     const oppSeat = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.45, 1.1), vinyl);
     oppSeat.position.set(0, 0.35, 1.9);
@@ -160,9 +161,15 @@ export class RestaurantScene {
 
   _buildFood() {
     const meal = createFoodMeal();
-    meal.group.position.set(0, 0.84, 0.88);
-    meal.group.scale.setScalar(2.35);
+    meal.group.position.set(0, 0.88, 0.9);
+    meal.group.scale.setScalar(1.85);
     this.scene.add(meal.group);
+    const plate = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.55, 0.55, 0.03, 24),
+      new THREE.MeshStandardMaterial({ color: 0xf4efe4, roughness: 0.4 }),
+    );
+    plate.position.set(0, 0.83, 0.9);
+    this.scene.add(this._track(plate, { sink: true }));
     this.food = meal;
     this.clickables = [meal.burger, meal.fries, meal.shake];
     for (const item of this.clickables) {
@@ -185,10 +192,10 @@ export class RestaurantScene {
       );
       panel.position.set(0, 5.45, z);
       this.scene.add(panel);
-      const light = new THREE.PointLight(0xfff1c2, 4.5, 16, 1.6);
+      const light = new THREE.PointLight(0xfff1c2, 2.2, 16, 1.6);
       light.position.set(0, 5.1, z);
       this.scene.add(light);
-      this.lights.push({ panel, light, base: 4.5 });
+      this.lights.push({ panel, light, base: 2.2 });
     }
 
     const windowLight = new THREE.PointLight(0x4a6aa8, 1.5, 12);
@@ -203,25 +210,25 @@ export class RestaurantScene {
   }
 
   applyLook(dx, dy) {
-    dx = THREE.MathUtils.clamp(dx, -28, 28);
-    dy = THREE.MathUtils.clamp(dy, -28, 28);
-    this.look.yaw -= dx * 0.0016;
-    this.look.pitch -= dy * 0.0015;
-    this.look.pitch = THREE.MathUtils.clamp(this.look.pitch, -0.85, 0.35);
-    this.look.yaw = THREE.MathUtils.clamp(this.look.yaw, Math.PI - 1.05, Math.PI + 1.05);
+    dx = THREE.MathUtils.clamp(dx, -18, 18);
+    dy = THREE.MathUtils.clamp(dy, -18, 18);
+    this.look.yaw -= dx * 0.0012;
+    this.look.pitch -= dy * 0.0012;
+    this.look.pitch = THREE.MathUtils.clamp(this.look.pitch, -0.22, 0.18);
+    this.look.yaw = THREE.MathUtils.clamp(this.look.yaw, -0.45, 0.45);
   }
 
   updateCamera(time) {
-    const breathe = Math.sin(time * 1.3) * 0.012;
+    const breathe = Math.sin(time * 1.3) * 0.01;
     this.camera.position.set(
       this.baseCamPos.x,
       this.baseCamPos.y + breathe,
       this.baseCamPos.z,
     );
-    this.camera.rotation.order = 'YXZ';
-    this.camera.rotation.y = this.look.yaw;
-    this.camera.rotation.x = this.look.pitch;
-    this.camera.rotation.z = Math.sin(time * 0.4) * 0.01;
+    const target = this.lookTarget.clone();
+    target.x += this.look.yaw * 1.4;
+    target.y += this.look.pitch * 1.1;
+    this.camera.lookAt(target);
   }
 
   pickFood(raycaster) {
@@ -242,9 +249,9 @@ export class RestaurantScene {
   }
 
   nextPrompt() {
-    if (this.eatStep === 0) return 'The burger is sitting there like it knows something. Click it.';
-    if (this.eatStep === 1) return 'Fries. They taste like a parking lot. Click them anyway.';
-    if (this.eatStep === 2) return 'The milkshake is sweating. Drink it.';
+    if (this.eatStep === 0) return 'Click anywhere to eat the burger.';
+    if (this.eatStep === 1) return 'Fries. They taste like a parking lot. Click to eat them.';
+    if (this.eatStep === 2) return 'The milkshake is sweating. Click to drink it.';
     return '';
   }
 

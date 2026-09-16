@@ -67,7 +67,7 @@ export class Game {
     this.overlay.onStart(() => this.startGame());
     window.addEventListener('resize', () => this.resize());
     canvas.addEventListener('click', () => {
-      if (this.mode === 'restaurant' || this.mode === 'drive' || this.mode === 'pullout' || this.mode === 'cockpit') {
+      if (this.mode === 'drive' || this.mode === 'pullout' || this.mode === 'cockpit') {
         this.input.requestLock();
         this._kickAudio();
       }
@@ -93,13 +93,14 @@ export class Game {
     this.restaurant.setAspect(window.innerWidth / window.innerHeight);
     this.camera = this.restaurant.camera;
     this.fx.setScene(this.restaurant.scene, this.camera);
-    this.fx.setBloom(0.22);
-    this.fx.setDream(0.05, 0.05);
+    this.fx.setBloom(0.1);
+    this.fx.setDream(0.02, 0.02);
     this.mode = 'restaurant';
     this.modeTime = 0;
+    this.eatCooldown = 0;
     this.overlay.showHud('cinematic');
     this.overlay.setPrompt(this.restaurant.nextPrompt());
-    this.input.requestLock();
+    this.input.exitLock();
   }
 
   enterArena(skipCinematic = false) {
@@ -171,12 +172,13 @@ export class Game {
     this.restaurant.applyLook(delta.dx, delta.dy);
     this.restaurant.updateCamera(this.time);
     this.overlay.setPrompt(this.restaurant.nextPrompt());
+    this.eatCooldown = Math.max(0, (this.eatCooldown || 0) - dt);
 
-    if (this.input.consumeClick()) {
-      this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.restaurant.camera);
-      const looked = this.restaurant.pickFood(this.raycaster);
-      const fallback = this.restaurant.look.pitch < 0.05 ? this._aimedMeal() : null;
-      if (this.restaurant.eat(looked || fallback)) {
+    const eatPressed = this.input.consumeClick() || this.input.down('Space') || this.input.down('KeyE');
+    if (eatPressed && this.eatCooldown <= 0) {
+      const next = this._aimedMeal();
+      if (this.restaurant.eat(next)) {
+        this.eatCooldown = 0.45;
         if (this.restaurant.eatStep < 3) this.audio.eat();
         else this.audio.gulp();
         this.overlay.toast(['chew', 'salt', 'oh no'][this.restaurant.eatStep - 1]);
