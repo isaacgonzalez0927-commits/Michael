@@ -243,7 +243,7 @@ export class Game {
     this.car.updateCamera(this.camera, dt, camMode);
     if (this.arenaFade > 0) {
       this.arenaFade = Math.max(0, this.arenaFade - dt);
-      this.overlay.setFade(this.arenaFade / 1.35);
+      this.overlay.setFade(this.arenaFade / 1.35 * 0.82);
       const k = this.arenaFade / 1.35;
       this.fx.setDream(0.07 + k * 0.28, 0.05 + k * 0.2);
     }

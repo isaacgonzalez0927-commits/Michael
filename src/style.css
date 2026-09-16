@@ -224,7 +224,7 @@ h1 {
 .fade {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, #f4fff8 0%, #7af0ff 55%, #120814 100%);
+  background: radial-gradient(circle at center, rgba(232, 255, 252, 0.92) 0%, rgba(90, 230, 255, 0.55) 48%, rgba(8, 6, 18, 0.25) 100%);
   opacity: 0;
   pointer-events: none;
   z-index: 20;
